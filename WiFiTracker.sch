@@ -43,25 +43,13 @@ encoding utf-8
 Sheet 1 1
 Title "LoRaCat: WiFiTracker"
 Date "2017-02-20"
-Rev "0.2"
+Rev "0.3"
 Comp "Electronic Cats"
 Comment1 "Andres Sabas"
 Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Comp
-L AP2112 U2
-U 1 1 58AB3530
-P 2095 5605
-F 0 "U2" H 1895 5905 60  0000 C CNN
-F 1 "AP2114" H 2245 5355 60  0000 C CNN
-F 2 "TO_SOT_Packages_SMD:SOT-223-3Lead_TabPin2" H 2095 5605 60  0001 C CNN
-F 3 "" H 2095 5605 60  0000 C CNN
-F 4 "AP2114H-3.3TRG1" H 2095 5605 60  0001 C CNN "manf#"
-	1    2095 5605
-	1    0    0    -1  
-$EndComp
 $Comp
 L C_Small C1
 U 1 1 58AB3532
@@ -774,7 +762,6 @@ F 3 "" H 590 5200 50  0000 C CNN
 	1    590  5200
 	0    -1   -1   0   
 $EndComp
-NoConn ~ 2595 5755
 $Comp
 L CONN_01X01 P1
 U 1 1 58AC21D1
@@ -786,7 +773,6 @@ F 3 "" H 3410 1480 50  0000 C CNN
 	1    3410 1480
 	1    0    0    -1  
 $EndComp
-NoConn ~ 1645 5605
 Text Label 1285 1980 2    60   ~ 0
 DIO0
 Text Label 1285 2080 2    60   ~ 0
@@ -1130,4 +1116,15 @@ Text Label 5395 1205 0    60   ~ 0
 DIO2
 Text Label 6210 935  0    60   ~ 0
 GPIO15
+$Comp
+L AP2112-RESCUE-NodeLoRaGroveKitty U2
+U 1 1 5940AB22
+P 2095 5605
+F 0 "U2" H 1895 5905 60  0000 C CNN
+F 1 "AP2114" H 2245 5355 60  0000 C CNN
+F 2 "TO_SOT_Packages_SMD:SOT-223-3Lead_TabPin2" H 2095 5605 60  0001 C CNN
+F 3 "" H 2095 5605 60  0000 C CNN
+	1    2095 5605
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
