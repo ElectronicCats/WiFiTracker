@@ -35,15 +35,17 @@
 #define USE_SERIAL Serial
 
 // use ttn dashboard to get this keys
-static const PROGMEM u1_t NWKSKEY[16] = { 0x47, 0xAE, 0x21, 0xA9, 0xDF, 0xDA, 0x5C, 0x27, 0xB1, 0xEF, 0x99, 0xAB, 0x53, 0x81, 0x4A, 0xE5 };
-static const u1_t PROGMEM APPSKEY[16] = { 0x22, 0x9D, 0x2A, 0x58, 0x1D, 0xA7, 0xC7, 0x32, 0x4E, 0xA9, 0x4C, 0x9D, 0xE8, 0x77, 0xF1, 0x34 };
-static const u4_t DEVADDR = 0x26011B0A; // <-- Change this address for every node!
+static const PROGMEM u1_t NWKSKEY[16] = { 0xE2, 0x6C, 0xFD, 0xC2, 0x5B, 0x80, 0x87, 0xD3, 0x9E, 0xBB, 0x63, 0xCD, 0xBD, 0xE5, 0xF3, 0x7B };
+static const u1_t PROGMEM APPSKEY[16] = { 0xC0, 0x73, 0xC8, 0x60, 0xB2, 0xF3, 0xF2, 0x64, 0x94, 0xF2, 0xAB, 0x80, 0xB6, 0x3D, 0x4B, 0x75 };
+static const u4_t DEVADDR = 0x2601173B; // <-- Change this address for every node!
 
 // WiFi vars
 static const int NR_MACS = 3;
 static uint8_t mydata[] = "test";
 uint8_t macs[NR_MACS * 7];    // Array to store the 4 mac for  // (nrMacs * 7) + nrMacs
 char buffer[64];
+
+const int sleepTimeS = 60;
 
 void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
@@ -57,9 +59,9 @@ static osjob_t sendjob;
 // cycle limitations).
 const unsigned TX_INTERVAL = 60;
 
-// Pin mapping ESP8266   D8 -> Slave select
+// Pin mapping ESP8266   D1 -> Slave select
 const lmic_pinmap lmic_pins = {
-    .nss = 15,
+    .nss = D1,
     .rxtx = LMIC_UNUSED_PIN,
     .rst = LMIC_UNUSED_PIN,
     .dio = {LMIC_UNUSED_PIN, LMIC_UNUSED_PIN, LMIC_UNUSED_PIN},
@@ -101,6 +103,7 @@ void ota() {
 }
 
 boolean hasLocation() {
+  digitalWrite(D2, HIGH);
   int n = WiFi.scanNetworks(); // number of acces points found
   if (n == 0) {
     Serial.println("Nope. No spots, are you lost or what :(");
@@ -185,8 +188,11 @@ void onEvent (ev_t ev) {
               Serial.println(LMIC.dataLen);
               Serial.println(F(" bytes of payload"));
             }
+            digitalWrite(D2, LOW);
             // Schedule next transmission
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
+            Serial.println(F("Sleep..."));
+            ESP.deepSleep(sleepTimeS * 1000000);
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -214,9 +220,11 @@ void setup() {
     Serial.begin(115200);
     Serial.println(F("Starting"));
     WiFi.mode(WIFI_STA);
+    pinMode(D2,OUTPUT);
     // check if it needs OTA update..
     ota();
     WiFi.mode(WIFI_OFF);
+    digitalWrite(D2, HIGH);
     // LMIC init
     os_init();
     // Reset the MAC state. Session and pending data transfers will be discarded.
@@ -243,7 +251,19 @@ void setup() {
     LMIC_setupChannel(7, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
     LMIC_setupChannel(8, 868100000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band
     #elif defined(CFG_us915)
-    LMIC_selectSubBand(1);
+      for (int channel=0; channel<72; ++channel) {
+          LMIC_disableChannel(channel);
+        }
+
+          LMIC_enableChannel(48);
+          LMIC_enableChannel(49);
+          LMIC_enableChannel(50);
+          LMIC_enableChannel(51);
+          LMIC_enableChannel(52);
+          LMIC_enableChannel(53);
+          LMIC_enableChannel(54);
+          LMIC_enableChannel(55);
+          LMIC_enableChannel(70);
     #endif
     // Disable link check validation
     LMIC_setLinkCheckMode(0);
