@@ -31,6 +31,7 @@
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
+#include <EEPROM.h>
 
 #define USE_SERIAL Serial
 
@@ -58,6 +59,16 @@ static osjob_t sendjob;
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
 const unsigned TX_INTERVAL = 60;
+
+// The LORAWAN session state is saved in EEPROM
+// Here just the frame sequence number is saved as its ABP with a Single Channel Gateway,
+// See http://forum.thethingsnetwork.org/t/new-backend-how-to-connect/1983/91
+#define INITED_FLAG 0x12344321 // <<<< Change this to have the frame sequence restart from zero
+typedef struct {
+  uint32 inited;
+  u4_t seqnoUp;
+} LORA_STATE;
+LORA_STATE loraState;
 
 // Pin mapping ESP8266   D1 -> Slave select
 const lmic_pinmap lmic_pins = {
@@ -134,6 +145,16 @@ boolean hasLocation() {
   return true;
 }
 
+void goToSleep() {
+
+  loraState.seqnoUp = LMIC.seqnoUp;
+  EEPROM.put(0, loraState);
+  EEPROM.end();
+  Serial.print("loraState.seqnoUp = "); Serial.println(loraState.seqnoUp);
+  Serial.println("Sleep...");
+  ESP.deepSleep(sleepTimeS * 1000000);
+}
+
 void do_send(osjob_t* j){
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
@@ -191,8 +212,7 @@ void onEvent (ev_t ev) {
             digitalWrite(D2, LOW);
             // Schedule next transmission
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
-            Serial.println(F("Sleep..."));
-            ESP.deepSleep(sleepTimeS * 1000000);
+            goToSleep();
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -218,6 +238,14 @@ void onEvent (ev_t ev) {
 
 void setup() {
     Serial.begin(115200);
+
+    EEPROM.begin(sizeof(loraState));
+ EEPROM.get(0, loraState);
+ if (loraState.inited != INITED_FLAG) {
+    loraState.inited = INITED_FLAG;
+    loraState.seqnoUp = 0;
+ }
+
     Serial.println(F("Starting"));
     WiFi.mode(WIFI_STA);
     pinMode(D2,OUTPUT);
@@ -229,6 +257,7 @@ void setup() {
     os_init();
     // Reset the MAC state. Session and pending data transfers will be discarded.
     LMIC_reset();
+
     #ifdef PROGMEM
     uint8_t appskey[sizeof(APPSKEY)];
     uint8_t nwkskey[sizeof(NWKSKEY)];
@@ -271,6 +300,9 @@ void setup() {
     LMIC.dn2Dr = DR_SF9;
     // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
     LMIC_setDrTxpow(DR_SF7,14);
+
+    LMIC.seqnoUp = loraState.seqnoUp;
+
     // Start job
     do_send(&sendjob);
 }
