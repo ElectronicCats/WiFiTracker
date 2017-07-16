@@ -43,7 +43,7 @@ encoding utf-8
 Sheet 1 1
 Title "LoRaCat: WiFiTracker"
 Date "2017-02-20"
-Rev "0.3"
+Rev "0.4"
 Comp "Electronic Cats"
 Comment1 "Andres Sabas"
 Comment2 ""
@@ -318,7 +318,7 @@ F 3 "" H 8930 3160 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Text Label 9230 3660 0    60   ~ 0
-RST
+RESET
 Text Notes 1600 600  0    60   ~ 0
 RFM95
 Text Notes 9405 690  0    60   ~ 0
@@ -609,7 +609,7 @@ TXD
 Text Label 6590 5420 0    60   ~ 0
 RXD
 Text Label 6595 5620 0    60   ~ 0
-RST
+RTS
 $Comp
 L VCC #PWR022
 U 1 1 58AB3578
