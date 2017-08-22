@@ -48,6 +48,8 @@ char buffer[64];
 
 const int sleepTimeS = 60;
 
+ADC_MODE(ADC_VCC); // enables reading the ESP8266 supply voltage
+
 void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
